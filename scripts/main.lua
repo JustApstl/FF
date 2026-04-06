@@ -1,8 +1,4 @@
---[[
-	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
-]]
 local descendants = game.CoreGui:GetDescendants()
-
 
 for _, descendant in pairs(descendants) do
 	if descendant.Name == "SimpleSpy2" then
@@ -14,7 +10,7 @@ local StarterGui = game:GetService("StarterGui")
 
 StarterGui:SetCore("SendNotification", {
 	Title = "Credits";
-	Text = "Goose Better#9356 / parrotyay on v3rm"
+	Text = "FF"
 })
 -- variables
 local themes = {
@@ -32,9 +28,9 @@ Players = game:GetService("Players")
 local speaker = game.Players.LocalPlayer
 Mouse = Players.LocalPlayer:GetMouse()
 local playerChildren = game.Players:GetChildren()
-if game.CoreGui:FindFirstChild("Fantastic Frontier Hub (Goose Better#9356)") then
+if game.CoreGui:FindFirstChild("FF") then
 	getgenv().scriptRunning = false
-	game.CoreGui:FindFirstChild("Fantastic Frontier Hub (Goose Better#9356)"):Destroy()
+	game.CoreGui:FindFirstChild("FF"):Destroy()
 end
 getgenv().scriptRunning = true
 local noFog = false
@@ -42,7 +38,7 @@ local noFog = false
 -- init
 local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/bardium/venyx/main/main"))()
 
-local venyx = library.new("Fantastic Frontier Hub (Goose Better#9356)", 5013109572)
+local venyx = library.new("FF", 5013109572)
 function goto(pos)
 	local active = true
 	if not game.Workspace.HOLE:FindFirstChild("HoleTPEntrance") then
@@ -422,9 +418,9 @@ Abilities:addButton("Get Grateful Frog", function()
 			else
 				venyx:Notify("Frog Finder","Can't teleport to frog, so character is moving around the map until it can teleport to frog. Hub disabled until frog found.","rbxassetid://912824766")
 				repeat
-					if game.CoreGui:FindFirstChild("Fantastic Frontier Hub (Goose Better#9356)") then
-						if game.CoreGui:FindFirstChild("Fantastic Frontier Hub (Goose Better#9356)"):FindFirstChild("Main") then
-							game.CoreGui:FindFirstChild("Fantastic Frontier Hub (Goose Better#9356)"):FindFirstChild("Main").Visible = false
+					if game.CoreGui:FindFirstChild("FF") then
+						if game.CoreGui:FindFirstChild("FF"):FindFirstChild("Main") then
+							game.CoreGui:FindFirstChild("FF"):FindFirstChild("Main").Visible = false
 						end
 					end
 					game:GetService("Workspace").Spawners["The Sprutle Frog Expansion_Updated"]["Spawner_GratefulFrogs"].SpawnLocations.SpawnBrick.Name = "lol"
@@ -448,9 +444,9 @@ Abilities:addButton("Get Grateful Frog", function()
 						end
 					end
 					venyx:Notify("Frog Finder","Tried collecting frog.","rbxassetid://912824766")
-					if game.CoreGui:FindFirstChild("Fantastic Frontier Hub (Goose Better#9356)") then
-						if game.CoreGui:FindFirstChild("Fantastic Frontier Hub (Goose Better#9356)"):FindFirstChild("Main") then
-							game.CoreGui:FindFirstChild("Fantastic Frontier Hub (Goose Better#9356)"):FindFirstChild("Main").Visible = true
+					if game.CoreGui:FindFirstChild("FF") then
+						if game.CoreGui:FindFirstChild("FF"):FindFirstChild("Main") then
+							game.CoreGui:FindFirstChild("FF"):FindFirstChild("Main").Visible = true
 						end
 					end
 				end
@@ -493,17 +489,17 @@ Abilities:addButton("Check For Path Gambler", function()
 	end
 end)
 
-Abilities:addButton("Faster Kills (Aidez)", function()
-	loadstring(game:HttpGet(('https://pastebin.com/raw/3KzLy2Gh'),true))()
+Abilities:addButton("Faster Kills", function()
+	loadstring(game:HttpGet(("https://raw.githubusercontent.com/JustApstl/FF/refs/heads/main/scripts/faster-kills.lua")))()
 end)
 
-Abilities:addButton("Auto Find Presents (Aidez)", function()
-	loadstring(game:HttpGet(('https://pastebin.com/raw/knCxEgQM'),true))()
+Abilities:addButton("Auto Find Presents", function()
+	loadstring(game:HttpGet(("https://raw.githubusercontent.com/JustApstl/FF/refs/heads/main/scripts/auto-find-presents.lua")))()
 end)
 
 Abilities:addText("Fast Regen Stamina will kill your character so store valueables in a chest.")
 Abilities:addButton("Fast Regen Stamina (Aidez)", function()
-	loadstring(game:HttpGet(('https://pastebin.com/raw/evnYjsyM'),true))()
+	loadstring(game:HttpGet(('https://pastebin.com/raw/evnYjsyM')))()
 end)
 local spawnersFolder = game:GetService("Workspace").Spawners
 for i,v in pairs (spawnersFolder:GetDescendants()) do
@@ -1356,11 +1352,9 @@ Universal:addButton("B-Tools", function()
 	end
 end)
 
-
 Universal:addButton("Infinite Yield", function()
 	loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
 end)
-
 
 function espFunction(BodyPart,color,text)
 	local ESPPartparent = BodyPart
@@ -1393,160 +1387,12 @@ function espFunction(BodyPart,color,text)
 		Text.BackgroundTransparency = 1
 	end
 end
-
-
 Abilities:addButton("Bring Spider Boss Closer To Topple Town", function()
-	local player = game.Players.LocalPlayer
-	if player:FindFirstChild("PlayerScripts") then
-		if player:FindFirstChild("PlayerScripts"):FindFirstChild("Fog") then
-			player.PlayerScripts.Fog:Destroy()
-			venyx:Notify("Bring Spider Boss","Removed fog.","rbxassetid://705101397")
-		end
-	end
-	if player.Character:FindFirstChild("Fogbox") then
-		if player.Character:FindFirstChild("Fogbox"):FindFirstChild("Ring1") then
-			player.Character.Fogbox.Ring1:Destroy()
-		end
-		if player.Character:FindFirstChild("Fogbox"):FindFirstChild("Ring2") then
-			player.Character.Fogbox.Ring2:Destroy()
-		end
-		if player.Character:FindFirstChild("Fogbox"):FindFirstChild("Ring3") then
-			player.Character.Fogbox.Ring3:Destroy()
-		end
-	end
-	if not game:GetService("Workspace").NPCS.BanditSpiderNPC:FindFirstChildWhichIsA("BasePart") then
-		if game.CoreGui:FindFirstChild("Fantastic Frontier Hub (Goose Better#9356)") then
-			if game.CoreGui:FindFirstChild("Fantastic Frontier Hub (Goose Better#9356)"):FindFirstChild("Main") then
-				game.CoreGui:FindFirstChild("Fantastic Frontier Hub (Goose Better#9356)"):FindFirstChild("Main").Visible = false
-			end
-		end
-		goto(Vector3.new(1496, 73, -3738))
-		task.wait(4)
-		venyx:Notify("Bring Spider Boss","Teleported to spider boss spawn area. Hub disabled until spider boss teleportation finished.","rbxassetid://705101397")
-		task.wait(1)
-		if not game:GetService("Workspace").NPCS.BanditSpiderNPC:FindFirstChildWhichIsA("BasePart") then
-			venyx:Notify("Bring Spider Boss","No spider boss found.","rbxassetid://705101397")
-			if game.CoreGui:FindFirstChild("Fantastic Frontier Hub (Goose Better#9356)") then
-				if game.CoreGui:FindFirstChild("Fantastic Frontier Hub (Goose Better#9356)"):FindFirstChild("Main") then
-					game.CoreGui:FindFirstChild("Fantastic Frontier Hub (Goose Better#9356)"):FindFirstChild("Main").Visible = true
-				end
-			end
-		else
-			task.wait()
-			--print("Spider Boss Position"..tostring(game:GetService("Workspace").NPCS.BanditSpiderNPC:FindFirstChildWhichIsA("BasePart").Position))
-			local Forces = {}
-			local FalseCollisions = {}
-			for _,part in pairs(game:GetService("Workspace").NPCS.BanditSpiderNPC:GetDescendants()) do
-				for i,c in pairs(part:GetChildren()) do
-					if c:IsA("BodyPosition") or c:IsA("BodyGyro") then
-						c:Destroy()
-					end
-				end
-				if part:IsA("BasePart") then
-					part.CanCollide = false
-					task.wait()
-					part.CanCollide = true
-					table.insert(FalseCollisions, part)
-				end
-				task.wait()
-				local ForceInstance = Instance.new("BodyPosition")
-				ForceInstance.Parent = part
-				ForceInstance.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-				table.insert(Forces, ForceInstance)
-				for i,c in pairs(Forces) do
-					c.Position = Vector3.new(684, 226, -438)
-				end
-
-			end
-			for i,p in pairs(FalseCollisions) do
-				p.CanCollide = true
-			end
-			for i,c in pairs(Forces) do
-				c.Position = Vector3.new(684, 226, -438)
-			end
-			task.wait(5)
-			venyx:Notify("Bring Spider Boss","Teleported to spider boss current location. Hub re-enabled.","rbxassetid://705101397")
-			if game.CoreGui:FindFirstChild("Fantastic Frontier Hub (Goose Better#9356)") then
-				if game.CoreGui:FindFirstChild("Fantastic Frontier Hub (Goose Better#9356)"):FindFirstChild("Main") then
-					game.CoreGui:FindFirstChild("Fantastic Frontier Hub (Goose Better#9356)"):FindFirstChild("Main").Visible = true
-				end
-			end
-			goto(game:GetService("Workspace").NPCS.BanditSpiderNPC:FindFirstChildWhichIsA("BasePart").Position + Vector3.new(30,30,30))
-		end
-	else
-		goto(game:GetService("Workspace").NPCS.BanditSpiderNPC:FindFirstChildWhichIsA("BasePart").Position + Vector3.new(30,30,30))
-		task.wait()
-		--print("Spider Boss Position"..tostring(game:GetService("Workspace").NPCS.BanditSpiderNPC:FindFirstChildWhichIsA("BasePart").Position))
-		venyx:Notify("Bring Spider Boss","Teleported to spider boss current location. Hub disabled until spider boss teleportation finished.","rbxassetid://705101397")
-		if game.CoreGui:FindFirstChild("Fantastic Frontier Hub (Goose Better#9356)") then
-			if game.CoreGui:FindFirstChild("Fantastic Frontier Hub (Goose Better#9356)"):FindFirstChild("Main") then
-				game.CoreGui:FindFirstChild("Fantastic Frontier Hub (Goose Better#9356)"):FindFirstChild("Main").Visible = true
-			end
-		end
-		local Forces = {}
-		local FalseCollisions = {}
-		if game.CoreGui:FindFirstChild("Fantastic Frontier Hub (Goose Better#9356)") then
-			if game.CoreGui:FindFirstChild("Fantastic Frontier Hub (Goose Better#9356)"):FindFirstChild("Main") then
-				game.CoreGui:FindFirstChild("Fantastic Frontier Hub (Goose Better#9356)"):FindFirstChild("Main").Visible = false
-			end
-		end
-		for _,part in pairs(game:GetService("Workspace").NPCS.BanditSpiderNPC:GetDescendants()) do
-			for i,c in pairs(part:GetChildren()) do
-				if c:IsA("BodyPosition") or c:IsA("BodyGyro") then
-					c:Destroy()
-				end
-			end
-			if part:IsA("BasePart") then
-				part.CanCollide = false
-				task.wait()
-				part.CanCollide = true
-				table.insert(FalseCollisions, part)
-			end
-			task.wait()
-			local ForceInstance = Instance.new("BodyPosition")
-			ForceInstance.Parent = part
-			ForceInstance.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-			table.insert(Forces, ForceInstance)
-			for i,c in pairs(Forces) do
-				c.Position = Vector3.new(684, 226, -438)
-			end
-
-		end
-		for i,p in pairs(FalseCollisions) do
-			p.CanCollide = true
-		end
-		for i,c in pairs(Forces) do
-			c.Position = Vector3.new(684, 226, -438)
-		end
-		task.wait(5)
-		venyx:Notify("Bring Spider Boss","Teleported to spider boss current location. Hub re-enabled.","rbxassetid://705101397")
-		if game.CoreGui:FindFirstChild("Fantastic Frontier Hub (Goose Better#9356)") then
-			if game.CoreGui:FindFirstChild("Fantastic Frontier Hub (Goose Better#9356)"):FindFirstChild("Main") then
-				game.CoreGui:FindFirstChild("Fantastic Frontier Hub (Goose Better#9356)"):FindFirstChild("Main").Visible = true
-			end
-		end
-		goto(game:GetService("Workspace").NPCS.BanditSpiderNPC:FindFirstChildWhichIsA("BasePart").Position + Vector3.new(30,30,30))
-	end
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/JustApstl/FF/refs/heads/main/scripts/bring-spider-boss-closer-to-topple-town.lua"))()
 end)
 
 Abilities:addButton("Teleport To Uncollected Ratboy Token", function()
-	for i,v in ipairs(game:GetService("Workspace").Folder:GetDescendants()) do
-		task.wait(.01)
-		if v:IsA("BoolValue") then
-			if v.Value == false then
-				local highlight = Instance.new("Highlight")
-				highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-				highlight.FillColor = Color3.fromRGB(255,255,128)
-				highlight.FillTransparency = 0.25
-				highlight.OutlineTransparency = 0.5
-				highlight.OutlineColor = Color3.fromRGB(0, 0, 0)
-				highlight.Adornee = v.Parent.Parent.Holder:FindFirstChildWhichIsA("Model")
-				highlight.Parent = v.Parent.Parent.Holder:FindFirstChildWhichIsA("Model")
-				goto(v.Parent.Parent.Holder:FindFirstChildWhichIsA("BasePart",true).Position)
-				return
-			end
-		end
-	end
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/JustApstl/FF/refs/heads/main/scripts/teleport-to-uncollected-ratboy-token.lua"))()
 end)
 
 local exitGui = SettingsPage:addSection("Exit Gui")
@@ -1579,8 +1425,8 @@ exitGui:addButton("Exit Gui", function()
 	speaker.Character.Humanoid.JumpPower = 81.5
 	speaker.Character.Humanoid.WalkSpeed = 18
 	getgenv().scriptRunning = false
-	if game.CoreGui:FindFirstChild("Fantastic Frontier Hub (Goose Better#9356)") then
-		game.CoreGui:FindFirstChild("Fantastic Frontier Hub (Goose Better#9356)"):Destroy()
+	if game.CoreGui:FindFirstChild("FF") then
+		game.CoreGui:FindFirstChild("FF"):Destroy()
 	end
 end)
 
@@ -1674,9 +1520,9 @@ for _, shop in pairs(game:GetService("Workspace").Shops:GetChildren()) do
 		local shopSection = ShopsPage:addSection(shop.Name)
 		
 		shopSection:addButton("Load Items", function()
-			if game.CoreGui:FindFirstChild("Fantastic Frontier Hub (Goose Better#9356)") then
-				if game.CoreGui:FindFirstChild("Fantastic Frontier Hub (Goose Better#9356)"):FindFirstChild("Main") then
-					local main = game.CoreGui:FindFirstChild("Fantastic Frontier Hub (Goose Better#9356)"):FindFirstChild("Main")
+			if game.CoreGui:FindFirstChild("FF") then
+				if game.CoreGui:FindFirstChild("FF"):FindFirstChild("Main") then
+					local main = game.CoreGui:FindFirstChild("FF"):FindFirstChild("Main")
 					if main:FindFirstChild("Shops") then
 						local shopsGui = main:FindFirstChild("Shops")
 
