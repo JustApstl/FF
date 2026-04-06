@@ -36,7 +36,8 @@ getgenv().scriptRunning = true
 local noFog = false
 
 -- init
-local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/bardium/venyx/main/main"))()
+--local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/bardium/venyx/main/main"))()
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/bardium/venyx/main/maintwo"))()
 --local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Stefanuk12/Venyx-UI-Library/main/source.lua"))()
 
 local venyx = library.new("FF", 5013109572)
@@ -1512,9 +1513,8 @@ function sellLostItems()
 	game:GetService("ReplicatedStorage").Events.SellShop:FireServer(407,workspace.Shops.Sellers,1) -- Wicked Junk Spellbook
 end
 
---[[
 repeat task.wait(0.01) until workspace:FindFirstChild("Shops")
-local ShopsPage = venyx:addPage("Shops", 5012537936)
+local ShopsPage = venyx:addPage("Shops")
 
 for _, shop in pairs(game:GetService("Workspace").Shops:GetChildren()) do
 	if shop:FindFirstChild("Slots") then
@@ -1556,7 +1556,6 @@ for _, shop in pairs(game:GetService("Workspace").Shops:GetChildren()) do
 		end)
 	end
 end
---]]
 
 venyx:SelectPage(venyx.pages[3], true)
 
