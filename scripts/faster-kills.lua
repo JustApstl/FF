@@ -1,8 +1,13 @@
-repeat wait() until game:FindFirstChild("Players") ~= nil
-repeat wait() until game.Players.LocalPlayer ~= nil
+repeat task.wait() until game:FindFirstChild("Players") ~= nil
+repeat task.wait() until game.Players.LocalPlayer ~= nil
+
+local Players = game:GetService("Players")
+local StarterGui = game:GetService("StarterGui")
+
+local player = Players.LocalPlayer
 
 local FasterKills = true
-local mouse = game.Players.LocalPlayer:GetMouse()
+local mouse = player:GetMouse()
 local unsafenames = {
     "TowerWolfNPC"; -- 15
     "Legend"; -- 23
@@ -36,9 +41,9 @@ end
 local function setuphumanoid(v)
     v.ChildAdded:Connect(function(child)
         if child.Name == "PlayerDamages" then
-            wait()
-            if child:FindFirstChild(game.Players.LocalPlayer.Name) then
-                local tracker = child:FindFirstChild(game.Players.LocalPlayer.Name)
+            task.wait()
+            if child:FindFirstChild(player.Name) then
+                local tracker = child:FindFirstChild(player.Name)
                 local model = v:FindFirstAncestorOfClass("Model")
                 local IsAnchored = false
                 for i,v in pairs(model:GetDescendants()) do
@@ -49,25 +54,25 @@ local function setuphumanoid(v)
                 if not IsAnchored then
                     model = v:FindFirstAncestorWhichIsA("Model")
                     if game.PlaceId == 963149987 and (v.MaxHealth - tracker.Value) / v.MaxHealth < 0.44 and FasterKills == true and IsInTable(unsafenames, model.Name) then
-                        wait(0.1)
+                        task.wait(0.1)
                         v.Health = 0
                     elseif game.PlaceId == 963149987 and (v.MaxHealth - tracker.Value) / v.MaxHealth < 0.01 and FasterKills == true and IsInTable(superunsafenames, model.Name) then
-                        wait(0.1)
+                        task.wait(0.1)
                         v.Health = 0
                     elseif game.PlaceId ~= 963149987 and (v.MaxHealth - tracker.Value) / v.MaxHealth < 0.69 and FasterKills == true and not IsInTable(unsafenames, model.Name) and not IsInTable(superunsafenames, model.Name) then
-                        wait(0.1)
+                        task.wait(0.1)
                         v.Health = 0
                     end
                     tracker.Changed:Connect(function()
                         model = v:FindFirstAncestorWhichIsA("Model")
                         if game.PlaceId == 963149987 and (v.MaxHealth - tracker.Value) / v.MaxHealth < 0.44 and FasterKills == true and IsInTable(unsafenames, model.Name) then
-                            wait(0.1)
+                            task.wait(0.1)
                             v.Health = 0
                         elseif game.PlaceId == 963149987 and (v.MaxHealth - tracker.Value) / v.MaxHealth < 0.01 and FasterKills == true and IsInTable(superunsafenames, model.Name) then
-                            wait(0.1)
+                            task.wait(0.1)
                             v.Health = 0
                         elseif game.PlaceId ~= 963149987 and (v.MaxHealth - tracker.Value) / v.MaxHealth < 0.69 and FasterKills == true and not IsInTable(unsafenames, model.Name) and not IsInTable(superunsafenames, model.Name) then
-                            wait(0.1)
+                            task.wait(0.1)
                             v.Health = 0
                         end
                     end)
@@ -87,19 +92,19 @@ mouse.KeyDown:Connect(function(key)
         else
             currenttext = "FASTER KILLS are now turned OFF!"
         end
-        game.StarterGui:SetCore("SendNotification", {
+        StarterGui:SetCore("SendNotification", {
             Title = "notification";
             Text = currenttext;
             Icon = "rbxassetid://2541869220";
             Duration = 3;
         })
         local model = game:FindFirstAncestorOfClass("Model")
-        if game.PlaceId == 963149987 and FasterKills == true and #game.Players:GetPlayers() == 1 then
-            wait(1)
-            for i,v in pairs(game.Workspace:GetDescendants()) do
+        if game.PlaceId == 963149987 and FasterKills == true and #Players:GetPlayers() == 1 then
+            task.wait(1)
+            for i,v in pairs(workspace:GetDescendants()) do
                 if v:IsA("Humanoid") then
                     local model = game:FindFirstAncestorOfClass("Model")
-                    if not v:FindFirstAncestor(game.Players.LocalPlayer.Name) and model ~= nil and not IsInTable(unsafenames, model.Name) and not IsInTable(superunsafenames, model.Name) then
+                    if not v:FindFirstAncestor(player.Name) and model ~= nil and not IsInTable(unsafenames, model.Name) and not IsInTable(superunsafenames, model.Name) then
                         v.Health = 0
                     end
                 end
@@ -108,20 +113,20 @@ mouse.KeyDown:Connect(function(key)
     end
 end)
 
-for i,v in pairs(game.Workspace:GetDescendants()) do
+for i,v in pairs(workspace:GetDescendants()) do
     if v:IsA("Humanoid") then
         local BelongsToPlayer = false
-        for i,x in pairs(game.Players:GetPlayers()) do
+        for i,x in pairs(Players:GetPlayers()) do
             if v:FindFirstAncestor(x.Name) then
                 BelongsToPlayer = true
             end
         end
         if not BelongsToPlayer then
             model = v:FindFirstAncestorOfClass("Model")
-            if game.PlaceId == 963149987 and FasterKills == true and #game.Players:GetPlayers() == 1 and not IsInTable(unsafenames, model.Name) and not IsInTable(superunsafenames, model.Name) then
-                wait(1)
+            if game.PlaceId == 963149987 and FasterKills == true and #Players:GetPlayers() == 1 and not IsInTable(unsafenames, model.Name) and not IsInTable(superunsafenames, model.Name) then
+                task.wait(1)
                 v.Health = 0
-            elseif game.PlaceId == 963149987 and #game.Players:GetPlayers() == 1 and IsInTable(unsafenames, model.Name) then
+            elseif game.PlaceId == 963149987 and #Players:GetPlayers() == 1 and IsInTable(unsafenames, model.Name) then
                 setuphumanoid(v)
             else
                 setuphumanoid(v)
@@ -129,20 +134,21 @@ for i,v in pairs(game.Workspace:GetDescendants()) do
         end
     end
 end
-game.Workspace.DescendantAdded:Connect(function(v)
+
+workspace.DescendantAdded:Connect(function(v)
     if v:IsA("Humanoid") then
         local BelongsToPlayer = false
-        for i,x in pairs(game.Players:GetPlayers()) do
+        for i,x in pairs(Players:GetPlayers()) do
             if v:FindFirstAncestor(x.Name) then
                 BelongsToPlayer = true
             end
         end
         if not BelongsToPlayer then
             model = v:FindFirstAncestorOfClass("Model")
-            if game.PlaceId == 963149987 and FasterKills == true and #game.Players:GetPlayers() == 1 and not IsInTable(unsafenames, model.Name) and not IsInTable(superunsafenames, model.Name) then
-                wait(1)
+            if game.PlaceId == 963149987 and FasterKills == true and #Players:GetPlayers() == 1 and not IsInTable(unsafenames, model.Name) and not IsInTable(superunsafenames, model.Name) then
+                task.wait(1)
                 v.Health = 0
-            elseif game.PlaceId == 963149987 and #game.Players:GetPlayers() == 1 and IsInTable(unsafenames, model.Name) or game.PlaceId == 963149987 and #game.Players:GetPlayers() == 1 and IsInTable(superunsafenames, model.Name) then
+            elseif game.PlaceId == 963149987 and #Players:GetPlayers() == 1 and IsInTable(unsafenames, model.Name) or game.PlaceId == 963149987 and #Players:GetPlayers() == 1 and IsInTable(superunsafenames, model.Name) then
                 setuphumanoid(v)
             else
                 setuphumanoid(v)
@@ -151,9 +157,9 @@ game.Workspace.DescendantAdded:Connect(function(v)
     end
 end)
 
-game.StarterGui:SetCore("SendNotification", {
+StarterGui:SetCore("SendNotification", {
     Title = "Loaded!";
-    Text = "Press L to toggle the script on / off! (Made by Aidez)";
+    Text = "Press L to toggle the script on / off!";
     Icon = "rbxassetid://2541869220";
     Duration = 3;
 })
