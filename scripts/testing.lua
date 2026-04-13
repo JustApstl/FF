@@ -130,6 +130,111 @@ local ESPTab = Window:CreateTab("ESP", 5012543246)
 local SettingsTab = Window:CreateTab("Settings", 5012544372)
 local ShopsTab = Window:CreateTab("Shops", 5012544372)
 
+-- ===================== PRESENT FINDER (FULLY FIXED & IMPROVED) =====================
+local LatestPresent = nil  -- stores the most recent present for teleport
+
+-- Modern mark function
+local function mark(part)
+    if part:FindFirstChild("parttrace") then return end
+    
+    local epic = Instance.new("Part")
+    epic.Name = "parttrace"
+    epic.Parent = part
+    epic.Position = part.Position
+    epic.Size = Vector3.new(0.3, 0.3, 0.3)
+    epic.Anchored = true
+    epic.Transparency = 1
+    epic.CanCollide = false
+
+    local billgui = Instance.new("BillboardGui", epic)
+    billgui.Name = "ESP"
+    billgui.Adornee = epic
+    billgui.AlwaysOnTop = true
+    billgui.Size = UDim2.new(0, 200, 0, 50)
+
+    local textlab = Instance.new("TextLabel", billgui)
+    textlab.BackgroundTransparency = 1
+    textlab.Size = UDim2.new(1, 0, 1, 0)
+    textlab.Font = Enum.Font.GothamBold
+    textlab.TextSize = 18
+    textlab.Text = "🎁 PRESENT"
+    textlab.TextColor3 = Color3.fromRGB(255, 80, 80)
+    textlab.TextStrokeTransparency = 0.4
+    textlab.TextStrokeColor3 = Color3.new(0, 0, 0)
+end
+
+-- Use the SAME goto function from your main script
+-- (no need to redefine it here)
+
+-- Present detection
+local function onPresentFound(present)
+    repeat task.wait() until present:FindFirstChild("PP")
+    local part = present:FindFirstChildOfClass("Part")
+    if not part then return end
+
+    mark(part)
+    LatestPresent = part  -- save for teleport button
+
+    Rayfield:Notify({
+        Title = "🎁 Present Found!",
+        Content = "A new present has spawned!\nClick the button below to teleport.",
+        Duration = 8,
+        Button1 = "Teleport to Present",
+        Callback = function()
+            if LatestPresent and LatestPresent.Parent then
+                goto(LatestPresent.Position)
+                Rayfield:Notify({Title = "Teleported!", Content = "Moved to the present.", Duration = 3})
+            else
+                Rayfield:Notify({Title = "Error", Content = "Present no longer exists.", Duration = 3})
+            end
+        end
+    })
+end
+
+-- Initial scan
+for _, child in pairs(Workspace:GetChildren()) do
+    if string.sub(string.lower(child.Name), 1, 7) == "present" and string.len(child.Name) == 8 then
+        onPresentFound(child)
+    end
+end
+
+-- New presents (ChildAdded)
+Workspace.ChildAdded:Connect(function(child)
+    if string.sub(string.lower(child.Name), 1, 7) == "present" and string.len(child.Name) == 8 then
+        onPresentFound(child)
+    end
+end)
+
+-- ===================== ADD TO FEATURES TAB =====================
+FeaturesTab:CreateSection("Present Finder")
+
+FeaturesTab:CreateButton({
+    Name = "Teleport to Latest Present",
+    Callback = function()
+        if LatestPresent and LatestPresent.Parent then
+            goto(LatestPresent.Position)
+            Rayfield:Notify({Title = "Success", Content = "Teleported to present!", Duration = 3})
+        else
+            Rayfield:Notify({Title = "No Present", Content = "No present detected yet.", Duration = 4})
+        end
+    end
+})
+
+FeaturesTab:CreateToggle({
+    Name = "Enable Present Notifications",
+    CurrentValue = true,
+    Callback = function(Value)
+        -- You can add extra logic here later if needed
+        Rayfield:Notify({Title = "Present Finder", Content = Value and "Notifications ENABLED" or "Notifications DISABLED", Duration = 3})
+    end
+})
+
+Rayfield:Notify({
+    Title = "🎁 Present Finder",
+    Content = "Present detector is now active!\nLook for notifications when a present spawns.",
+    Duration = 6
+})
+
 -- ===================== ALL TELEPORTS (COMPLETE) =====================
 TeleportsTab:CreateSection("Overworld Teleports")
 TeleportsTab:CreateDropdown({
@@ -311,7 +416,7 @@ FeaturesTab:CreateButton({Name = "Check For Path Gambler", Callback = function()
 end})
 
 FeaturesTab:CreateButton({Name = "Faster Kills", Callback = function() loadstring(game:HttpGet(("https://raw.githubusercontent.com/SeventhBuilder/FF/main/scripts/faster-kills.lua")))() end})
-FeaturesTab:CreateButton({Name = "Auto Find Presents", Callback = function() loadstring(game:HttpGet(("https://raw.githubusercontent.com/SeventhBuilder/FF/main/scripts/auto-find-presents.lua")))() end})
+--FeaturesTab:CreateButton({Name = "Auto Find Presents", Callback = function() loadstring(game:HttpGet(("https://raw.githubusercontent.com/SeventhBuilder/FF/main/scripts/auto-find-presents.lua")))() end})
 FeaturesTab:CreateButton({Name = "Fast Regen Stamina", Callback = function() loadstring(game:HttpGet(("https://raw.githubusercontent.com/SeventhBuilder/FF/main/scripts/fast-regen-stamina.lua")))() end})
 FeaturesTab:CreateButton({Name = "Bring Spider Boss Closer To Topple Town", Callback = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/JustApstl/FF/refs/heads/main/scripts/bring-spider-boss-closer-to-topple-town.lua"))() end})
 FeaturesTab:CreateButton({Name = "Teleport To Uncollected Ratboy Token", Callback = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/JustApstl/FF/refs/heads/main/scripts/teleport-to-uncollected-ratboy-token.lua"))() end})
