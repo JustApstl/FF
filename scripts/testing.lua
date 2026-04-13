@@ -552,11 +552,39 @@ FeaturesTab:CreateButton({Name = "Check For Path Gambler", Callback = function()
 end})
 
 FeaturesTab:CreateSection("Abilities")
+
+
+
 FeaturesTab:CreateButton({Name = "Remove All Trees", Callback = function()
+	local trees = {"PostTrees", "Tree_B_1", "Tree_B_2", "Tree_C_1", "Tree_D_1", "Tree_D_2"}	
 	for _, i in pairs(Workspace:GetDescendants()) do
-		if i.Name == "PostTrees" or i.Name == "Tree_B_1" or i.Name == "Tree_B_2" or i.Name == "Tree_C_1" or i.Name == "Tree_D_1" or i.Name == "Tree_D_2" then i:Destroy() end
+		if trees[i.Name] then
+			i:Destory()
+		end
 	end
 	Rayfield:Notify({Title="Status", Content="All trees removed!", Duration=3})
+end})
+
+FeaturesTab:CreateButton({Name = "Remove All Vegetation ", Callback = function()
+	local vegetations = {"GrassyRootSystemPart", "BushLeafPart", "LilyPadPart"}
+	for _, i in pairs(Workspace:GetDescendants()) do
+		if vegetations[i.Name] then 
+			i:Destroy()
+		elseif i:IsA("MeshPart") and i.MeshId == "rbxassetid://511992639" then
+			i:Destroy()	
+		end
+	end
+	Rayfield:Notify({Title="Status", Content="All vegetation removed!", Duration=3})
+end})
+
+FeaturesTab:CreateButton({Name = "Remove All rocks", Callback = function()
+	local rocks = {"LargeRockPart"}
+	for _, i in pairs(Workspace:GetDescendants()) do
+		if rocks[i.Name] then 
+			i:Destroy() 
+		end
+	end
+	Rayfield:Notify({Title="Status", Content="All rocks removed!", Duration=3})
 end})
 
 FeaturesTab:CreateButton({Name = "Remove Fog", Callback = function()
