@@ -551,7 +551,7 @@ FeaturesTab:CreateButton({Name = "Check For Path Gambler", Callback = function()
 	end
 end})
 
-FeaturesTab:CreateSection("Abilities")
+FeaturesTab:CreateSection("Performance")
 
 FeaturesTab:CreateButton({Name = "Remove All Trees", Callback = function()
 	local trees = {"PostTrees", "Tree_B_1", "Tree_B_2", "Tree_C_1", "Tree_D_1", "Tree_D_2"}
@@ -583,7 +583,7 @@ FeaturesTab:CreateButton({Name = "Remove All Vegetation ", Callback = function()
 	Rayfield:Notify({Title="Status", Content="All vegetation removed!", Duration=3})
 end})
 
-FeaturesTab:CreateButton({Name = "Remove All rocks", Callback = function()
+FeaturesTab:CreateButton({Name = "Remove All Rocks", Callback = function()
 	local rocks = {"LargeRockPart"}--, "RockPart", "Rock_A_1", "Rock_A_2", "Rock_A_3"}
 	for _, obj in pairs(Workspace:GetDescendants()) do
 		for _, name in pairs(rocks) do
@@ -594,6 +594,8 @@ FeaturesTab:CreateButton({Name = "Remove All rocks", Callback = function()
 	end
 	Rayfield:Notify({Title="Status", Content="All rocks removed!", Duration=3})
 end})
+
+FeaturesTab:CreateSection("Abilities")
 
 FeaturesTab:CreateButton({Name = "Remove Fog", Callback = function()
 	pcall(function()
