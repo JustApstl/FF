@@ -553,13 +553,13 @@ end})
 
 FeaturesTab:CreateSection("Abilities")
 
-
-
 FeaturesTab:CreateButton({Name = "Remove All Trees", Callback = function()
-	local trees = {"PostTrees", "Tree_B_1", "Tree_B_2", "Tree_C_1", "Tree_D_1", "Tree_D_2"}	
-	for _, i in pairs(Workspace:GetDescendants()) do
-		if trees[i.Name] then
-			i:Destory()
+	local trees = {"PostTrees", "Tree_B_1", "Tree_B_2", "Tree_C_1", "Tree_D_1", "Tree_D_2"}
+	for _, obj in pairs(Workspace:GetDescendants()) do
+		for _, name in pairs(trees) do
+			if obj.Name == name then
+				obj:Destroy()
+			end
 		end
 	end
 	Rayfield:Notify({Title="Status", Content="All trees removed!", Duration=3})
@@ -567,11 +567,14 @@ end})
 
 FeaturesTab:CreateButton({Name = "Remove All Vegetation ", Callback = function()
 	local vegetations = {"GrassyRootSystemPart", "BushLeafPart", "LilyPadPart", "FlowerPart", "BushPart", "CropPartSQ", "GrassPart"}
-	for _, i in pairs(Workspace:GetDescendants()) do
-		if vegetations[i.Name] then 
-			i:Destroy()
-		elseif i:IsA("MeshPart") and i.MeshId == "rbxassetid://511992639" then
-			i:Destroy()	
+	for _, obj in pairs(Workspace:GetDescendants()) do
+		for _, name in pairs(vegetations) do
+			if obj.Name == name then
+				obj:Destroy()
+			end
+		end
+		if obj:IsA("MeshPart") and obj.MeshId == "rbxassetid://511992639" then
+			obj:Destroy()	
 		end
 	end
 	Rayfield:Notify({Title="Status", Content="All vegetation removed!", Duration=3})
@@ -579,9 +582,11 @@ end})
 
 FeaturesTab:CreateButton({Name = "Remove All rocks", Callback = function()
 	local rocks = {"LargeRockPart"}
-	for _, i in pairs(Workspace:GetDescendants()) do
-		if rocks[i.Name] then 
-			i:Destroy() 
+	for _, obj in pairs(Workspace:GetDescendants()) do
+		for _, name in pairs(rocks) do
+			if obj.Name == name then
+				obj:Destroy()
+			end
 		end
 	end
 	Rayfield:Notify({Title="Status", Content="All rocks removed!", Duration=3})
