@@ -1163,7 +1163,7 @@ PlayerTab:CreateButton({Name="Telekinesis", Callback=function()
 			end
 		)
 	end
-	Rayfield:Notify({Title="B-Tools", Content="Telekinesis added to backpack!", Duration=3})
+	Rayfield:Notify({Title="Telekinesis", Content="Telekinesis added to backpack!", Duration=3})
 end})
 
 PlayerTab:CreateButton({Name="B-Tools", Callback=function()
