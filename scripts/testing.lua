@@ -570,7 +570,7 @@ FeaturesTab:CreateButton({Name = "Remove All Vegetation ", Callback = function()
 	for _, obj in pairs(Workspace:GetDescendants()) do
 		for _, name in pairs(vegetations) do
 			if obj.Parent:IsA("Model") and obj.Parent.Name == "Model" then
-				obj.Parent:Destory()
+				obj.Parent:Destroy()
 			end
 			if obj.Name == name then
 				obj:Destroy()
