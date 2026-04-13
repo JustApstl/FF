@@ -553,8 +553,8 @@ end})
 
 FeaturesTab:CreateSection("Abilities")
 FeaturesTab:CreateButton({Name = "Remove All Trees", Callback = function()
-	for _, v in pairs(Workspace:GetDescendants()) do
-		if v.Name == "PostTrees" then v:Destroy() end
+	for _, i in pairs(Workspace:GetDescendants()) do
+		if i.Name == "PostTrees" or i.Name == "Tree_B_1" or i.Name == "Tree_C_1" and i.Name == "Tree_D_1" then i:Destroy() end
 	end
 	Rayfield:Notify({Title="Status", Content="All trees removed!", Duration=3})
 end})
