@@ -10,8 +10,8 @@ local Lighting			= game:GetService("Lighting")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local StarterGui        = game:GetService("StarterGui")
 
-for _, d in pairs(CoreGui:GetDescendants()) do
-	if d.Name == "SimpleSpy2" then d:Destroy(); Players.LocalPlayer:Kick("Unstable connection detected") end
+for _, i in pairs(CoreGui:GetDescendants()) do
+	if i.Name == "SimpleSpy2" then i:Destroy(); Players.LocalPlayer:Kick("Unstable connection detected") end
 end
 if CoreGui:FindFirstChild("RayfieldLibrary") then CoreGui:FindFirstChild("RayfieldLibrary"):Destroy() end
 getgenv().scriptRunning = false; task.wait(0.1); getgenv().scriptRunning = true
