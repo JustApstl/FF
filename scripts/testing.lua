@@ -17,7 +17,7 @@ if CoreGui:FindFirstChild("RayfieldLibrary") then CoreGui:FindFirstChild("Rayfie
 getgenv().scriptRunning = false; task.wait(0.1); getgenv().scriptRunning = true
 
 local player = Players.LocalPlayer
-local Mouse   = player:GetMouse()
+local Mouse  = player:GetMouse()
 
 -- =====================================================================
 -- STATE  (Rayfield declared early so all functions can reference it)
@@ -1107,11 +1107,11 @@ TeleportsTab:CreateDropdown({Name="Housing Location", SearchEnabled=true, Curren
 	Callback=function(opt) if HOUSING_TP[opt[1]] then teleportTo(HOUSING_TP[opt[1]]) end end})
 
 TeleportsTab:CreateSection("🧑‍💼 Vendors")
-	Options={"Amy Thistlewitch","Arbewhy","Archaeologist"},
-	Callback=function(opt) if VENDOR_TP[opt[1]] then teleportTo(VENDOR_TP[opt[1]]) end end})
--- TeleportsTab:CreateButton({Name="Amy Thistlewitch", Callback=function() teleportTo(VENDOR_TP["Amy Thistlewitch"]) end})
--- TeleportsTab:CreateButton({Name="Arbewhy",          Callback=function() teleportTo(VENDOR_TP["Arbewhy"]) end})
--- TeleportsTab:CreateButton({Name="Archaeologist",    Callback=function() teleportTo(VENDOR_TP["Archaeologist"]) end})
+	-- Options={"Amy Thistlewitch","Arbewhy","Archaeologist"},
+	-- Callback=function(opt) if VENDOR_TP[opt[1]] then teleportTo(VENDOR_TP[opt[1]]) end end})
+TeleportsTab:CreateButton({Name="Amy Thistlewitch", Callback=function() teleportTo(VENDOR_TP["Amy Thistlewitch"]) end})
+TeleportsTab:CreateButton({Name="Arbewhy",          Callback=function() teleportTo(VENDOR_TP["Arbewhy"]) end})
+TeleportsTab:CreateButton({Name="Archaeologist",    Callback=function() teleportTo(VENDOR_TP["Archaeologist"]) end})
 
 TeleportsTab:CreateSection("🚪 Entrances")
 for _, ev in pairs(ENTRANCES) do
