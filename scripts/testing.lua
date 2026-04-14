@@ -1107,11 +1107,9 @@ TeleportsTab:CreateDropdown({Name="Housing Location", SearchEnabled=true, Curren
 	Callback=function(opt) if HOUSING_TP[opt[1]] then teleportTo(HOUSING_TP[opt[1]]) end end})
 
 TeleportsTab:CreateSection("🧑‍💼 Vendors")
+TeleportsTab:CreateDropdown({Name="Vendors", SearchEnabled=true, CurrentOption={""}, MultipleOptions=false,
 	Options={"Amy Thistlewitch","Arbewhy","Archaeologist"},
 	Callback=function(opt) if VENDOR_TP[opt[1]] then teleportTo(VENDOR_TP[opt[1]]) end end})
--- TeleportsTab:CreateButton({Name="Amy Thistlewitch", Callback=function() teleportTo(VENDOR_TP["Amy Thistlewitch"]) end})
--- TeleportsTab:CreateButton({Name="Arbewhy",          Callback=function() teleportTo(VENDOR_TP["Arbewhy"]) end})
--- TeleportsTab:CreateButton({Name="Archaeologist",    Callback=function() teleportTo(VENDOR_TP["Archaeologist"]) end})
 
 TeleportsTab:CreateSection("🚪 Entrances")
 for _, ev in pairs(ENTRANCES) do
