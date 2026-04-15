@@ -1474,14 +1474,14 @@ local ActualWindow = WindUI:CreateWindow({
 	Title = "FF Hub",
 	Icon = "compass",
 	Author = "by SeventhBuilder",
-	Folder = "FFHub",
+	--Folder = "FFHub",
 	Size = UDim2.fromOffset(640, 470),
 	MinSize = Vector2.new(580, 360),
 	Theme = "Dark",
 	Transparent = true,
 	Resizable = true,
 	SideBarWidth = 190,
-	HideSearchBar = true,
+	HideSearchBar = false,
 	ScrollBarEnabled = true,
 })
 
@@ -2564,3 +2564,9 @@ task.spawn(function()
 		end
 	end
 end)
+
+ActualWindow:DisableTopbarButtons({
+   -- "Close", 
+    "Minimize", 
+   -- "Fullscreen",
+})
