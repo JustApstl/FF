@@ -1,5 +1,5 @@
 -- ============================================================
---  FF Hub  |  Original by SeventhBuilder  |  v9
+--  FF Hub  |  Original by SeventhBuilder  |  v10
 -- ============================================================
 
 RunService        = game:GetService("RunService")
@@ -34,10 +34,10 @@ local amountEmptyInventory = 20
 local Clip = false; local Noclipping = nil
 local FLYING = false; local flyKeyDown, flyKeyUp
 
-local enabled = { present=false, frog=false, strangeman=false, pitfall=false, rabbithole=false, cosmic=false, gambler=false }
-local notif   = { present=true, frog=true, cosmic=true, gambler=true, firefly=true, birdnest=true, strangeman=true, rabbithole=true, pitfall=true }
-local autoCollect = { present=false, frog=false }
-local espToggles  = { plants=true, present=true, frog=true, strangeman=true, rabbithole=true, pitfall=true, players=false }
+local enabled = { present=false, strangeman=false, pitfall=false, rabbithole=false, cosmic=false, gambler=false }
+local notif   = { present=true, cosmic=true, gambler=true, firefly=true, birdnest=true, strangeman=true, rabbithole=true, pitfall=true }
+local autoCollect = { present=false }
+local espToggles  = { plants=true, present=true, strangeman=true, rabbithole=true, pitfall=true, players=false }
 
 local spawnersFolder = Workspace.Spawners
 local plants = {}; local plantNames = {}; local loweredPlantNames = {}
@@ -50,6 +50,7 @@ local monsterOptionLookup = {}
 local travelerOptionLookup = {}
 local collectibleOptionLookup = {}
 local shopItemOptionLookup = {}
+local entranceOptionLookup = {}
 local trackedPlantEntries = {}
 local notifiedInstances = setmetatable({}, {__mode="k"})
 local autoCollectedInstances = setmetatable({}, {__mode="k"})
@@ -67,6 +68,7 @@ local trackerSelections = {
 	animals = {},
 	monsters = {},
 	travelers = {},
+	entrances = {},
 	collectibles = {},
 	shopItems = {},
 }
@@ -78,6 +80,7 @@ itemInfoByLowerName = {}
 plantScanCache = {}
 plantScanDirty = true
 plantScanLastRun = 0
+shopItemOptionsLoaded = false
 
 -- Entity watchers (animals, collectibles, monsters, travelers)
 local entityWatchList = {}     -- [instanceName] = {label, active, notify, esp, entityType}
@@ -85,7 +88,6 @@ local travelerWatchList = {}   -- [instanceName] = {label, active, notify, esp, 
 
 -- Paragraph UI elements
 local presentStatusParagraph = nil
-local frogStatusParagraph    = nil
 local entranceParagraphs     = {}   -- [key] = paragraph element
 local updateTrackedPlantStatus
 local setFlyJump
@@ -106,6 +108,43 @@ function notify(opts)
 		Title = opts.Title or "FF Hub",
 		Content = opts.Content or "",
 		Duration = opts.Duration or 3,
+	})
+end
+
+function showActionDialog(opts)
+	local title = opts.Title or "FF Hub"
+	local content = opts.Content or ""
+	local actionTitle = opts.ActionTitle or "OK"
+	if Window and Window.ShowDialog then
+		local ok, dialog = pcall(function()
+			return Window:ShowDialog({
+				Title = title,
+				Content = content,
+				Buttons = {
+					{
+						Title = actionTitle,
+						Callback = function()
+							if opts.Callback then
+								task.spawn(opts.Callback)
+							end
+						end,
+					},
+					{
+						Title = "Close",
+						Variant = "Secondary",
+					},
+				},
+			})
+		end)
+		if ok and dialog and dialog.Show then
+			dialog:Show()
+			return
+		end
+	end
+	notify({
+		Title = title,
+		Content = content,
+		Duration = opts.Duration or 4,
 	})
 end
 
@@ -216,9 +255,10 @@ end
 
 function setDropdownSelection(dropdownKey)
 	local dropdown = trackerDropdowns[dropdownKey]
+	local values = getSelectionValues(trackerSelections[dropdownKey])
 	if dropdown then
 		pcall(function()
-			dropdown:Select(getSelectionValues(trackerSelections[dropdownKey]))
+			dropdown:Select(values)
 		end)
 	end
 end
@@ -370,7 +410,7 @@ end
 
 function teleportEntrance(ev)
 	if not enabled[ev.key] then
-		notify({Title=ev.label, Content="Enable it first in Features.", Duration=3}) return
+		notify({Title=ev.label, Content="Track it first in the Entrances dropdown.", Duration=3}) return
 	end
 	local entrance = ev.getEntrance()
 	if not entrance then notify({Title=ev.label, Content="Not available right now.", Duration=3}) return end
@@ -388,16 +428,13 @@ function onNightBeginEntrances()
 			if enabled[ev.key] then
 				local entrance = ev.getEntrance()
 				if entrance and notif[ev.key] then
-	local bindable = Instance.new("BindableFunction")
-	bindable.OnInvoke = function()
-		task.spawn(function()
-			teleportEntrance(ev)
-		end)
-		return true
-	end
-					StarterGui:SetCore("SendNotification", {
-						Title=ev.label.." Available!", Text="Entrance appeared.",
-						Duration=20, Callback=bindable, Button1="Teleport",
+					showActionDialog({
+						Title = ev.label .. " Available!",
+						Content = "Entrance appeared.",
+						ActionTitle = "Teleport",
+						Callback = function()
+							teleportEntrance(ev)
+						end,
 					})
 				end
 			end
@@ -440,17 +477,15 @@ function notifyAndTeleportNPC(npcName, label)
 		if not entry.notify or notifiedInstances[npc] then return end
 		notifiedInstances[npc] = true
 		local part = npc:IsA("BasePart") and npc or npc:FindFirstChildWhichIsA("BasePart", true)
-		local bindable = Instance.new("BindableFunction")
-		bindable.OnInvoke = function()
-			task.spawn(function()
-				if part then teleportTo(part.Position + Vector3.new(0,5,0)) end
-			end)
-			return true
-		end
-		StarterGui:SetCore("SendNotification", {
-			Title="🧭 "..label.." Available!",
-			Text="Traveler spotted. Click to teleport.",
-			Duration=20, Callback=bindable, Button1="Teleport",
+		showActionDialog({
+			Title = "🧭 " .. label .. " Available!",
+			Content = "Traveler spotted. Click teleport to move there.",
+			ActionTitle = "Teleport",
+			Callback = function()
+				if part then
+					teleportTo(part.Position + Vector3.new(0, 5, 0))
+				end
+			end,
 		})
 	end
 end
@@ -467,17 +502,15 @@ end
 -- Single notification helper for generic entities
 function notifyEntity(instance, label, entityType)
 	local part = instance:IsA("BasePart") and instance or instance:FindFirstChildWhichIsA("BasePart", true)
-	local bindable = Instance.new("BindableFunction")
-	bindable.OnInvoke = function()
-		task.spawn(function()
-			if part and part.Parent then teleportTo(part.Position + Vector3.new(0,5,0)) end
-		end)
-		return true
-	end
-	StarterGui:SetCore("SendNotification", {
-		Title="["..entityType.."] "..label.." spotted!",
-		Text="Click to teleport.",
-		Duration=15, Callback=bindable, Button1="Teleport",
+	showActionDialog({
+		Title = "[" .. entityType .. "] " .. label .. " spotted!",
+		Content = "Use teleport to move to the tracked target.",
+		ActionTitle = "Teleport",
+		Callback = function()
+			if part and part.Parent then
+				teleportTo(part.Position + Vector3.new(0, 5, 0))
+			end
+		end,
 	})
 end
 
@@ -548,100 +581,20 @@ end
 -- FROG HELPER
 -- =====================================================================
 function updateFrogParagraph()
-	if not frogStatusParagraph then return end
-	if not enabled.frog then
-		updateParagraph(frogStatusParagraph, "🐸 Frog Status", "Frog feature is disabled.")
-		return
-	end
-	local spawner = Workspace.Spawners:FindFirstChild("The Sprutle Frog Expansion_Updated")
-	if not spawner then
-		updateParagraph(frogStatusParagraph, "🐸 Frog Status", "❌ Frog spawner not found.")
-		return
-	end
-	local frogSpawner = spawner:FindFirstChild("Spawner_GratefulFrogs")
-	if not frogSpawner then
-		updateParagraph(frogStatusParagraph, "🐸 Frog Status", "❌ Spawner_GratefulFrogs not found.")
-		return
-	end
-	local collectible = frogSpawner:FindFirstChild("Collectible")
-	if collectible then
-		local part = collectible:FindFirstChildWhichIsA("BasePart")
-		if part then
-			local pos = ("%.0f, %.0f, %.0f"):format(part.Position.X, part.Position.Y, part.Position.Z)
-			updateParagraph(frogStatusParagraph, "🐸 Frog Status", "✅ Frog is available!\nPosition: "..pos)
-		else
-			updateParagraph(frogStatusParagraph, "🐸 Frog Status", "⚠️ Frog exists but not fully loaded yet.")
-		end
-	else
-		updateParagraph(frogStatusParagraph, "🐸 Frog Status", "❌ No frog right now.")
-	end
+	return
 end
 
 function tryCollectFrog(doCollect)
-	if not enabled.frog then
-	notify({Title="Frog", Content="Enable Grateful Frog first.", Duration=2})
+	local entry = trackedPlantEntries.GratefulFrogs
+	if not entry then return end
+	if doCollect then
+		collectPlantEntryNow(entry)
 		return
 	end
-	local spawner = Workspace.Spawners:FindFirstChild("The Sprutle Frog Expansion_Updated")
-	if not spawner then
-	notify({Title="Frog Finder", Content="Frog spawner folder not found.", Duration=3})
-		return
+	local _, part = findFirstTrackedPlantTarget(entry)
+	if part then
+		teleportTo(part.Position + Vector3.new(0, 5, 0))
 	end
-	local frogSpawner = spawner:FindFirstChild("Spawner_GratefulFrogs")
-	if not frogSpawner then
-	notify({Title="Frog Finder", Content="Spawner_GratefulFrogs not found.", Duration=3})
-		return
-	end
-	local collectible = frogSpawner:FindFirstChild("Collectible")
-	if collectible then
-		local part = collectible:FindFirstChildWhichIsA("BasePart")
-		if espToggles.frog and part then
-			addHighlightESP(collectible, Color3.fromRGB(0,255,80), Color3.fromRGB(0,200,60), "FrogESP")
-			addBillboardESP(part, "🐸 FROG", Color3.fromRGB(0,255,80), "FrogESP")
-		end
-		if part then
-		if notif.frog then notify({Title="Frog Finder", Content="Frog found! Teleporting...", Duration=3}) end
-			teleportTo(part.Position)
-			if doCollect then
-				for _ = 1,50 do
-					task.wait()
-					if frogSpawner:FindFirstChild("Collectible") and frogSpawner.Collectible:FindFirstChild("InteractEvent") then
-						frogSpawner.Collectible.InteractEvent:FireServer()
-					end
-				end
-				if notif.frog then notify({Title="Frog Finder", Content="Collection attempt done!", Duration=3}) end
-			end
-		else
-			if notif.frog then notify({Title="Frog Finder", Content="Frog not loaded. Moving to spawn...", Duration=4}) end
-			local tries = 0
-			repeat
-				local sb = frogSpawner.SpawnLocations:FindFirstChild("SpawnBrick")
-				if not sb then break end
-				teleportTo(sb.Position + Vector3.new(0,10,0))
-				task.wait(0.5); tries += 1
-			until frogSpawner.Collectible:FindFirstChildWhichIsA("BasePart")
-				or not frogSpawner.SpawnLocations:FindFirstChild("SpawnBrick")
-				or tries > 20
-			local rp = frogSpawner.Collectible:FindFirstChildWhichIsA("BasePart")
-			if rp then
-				teleportTo(rp.Position)
-				if doCollect then
-					for _ = 1,50 do
-						task.wait()
-						if frogSpawner:FindFirstChild("Collectible") and frogSpawner.Collectible:FindFirstChild("InteractEvent") then
-							frogSpawner.Collectible.InteractEvent:FireServer()
-						end
-					end
-					if notif.frog then notify({Title="Frog Finder", Content="Frog collected!", Duration=3}) end
-				end
-			else
-				if notif.frog then notify({Title="Frog Finder", Content="Frog failed to load.", Duration=4}) end
-			end
-		end
-	else
-		notify({Title="Frog Finder", Content="No frog right now.", Duration=3})
-	end
-	updateFrogParagraph()
 end
 
 function iterateTrackedPlantInstances(entry, callback)
@@ -670,21 +623,15 @@ end
 function notifyTrackedPlant(entry, model, part)
 	if not entry or not entry.notify or not model or notifiedInstances[model] then return end
 	notifiedInstances[model] = true
-	local bindable = Instance.new("BindableFunction")
-	bindable.OnInvoke = function()
-		task.spawn(function()
+	showActionDialog({
+		Title = "[Plant] " .. entry.label .. " found!",
+		Content = "Use teleport to move to this plant.",
+		ActionTitle = "Teleport",
+		Callback = function()
 			if part and part.Parent then
 				teleportTo(part.Position + Vector3.new(0, 5, 0))
 			end
-		end)
-		return true
-	end
-	StarterGui:SetCore("SendNotification", {
-		Title="[Plant] " .. entry.label .. " found!",
-		Text="Click to teleport.",
-		Duration=15,
-		Callback=bindable,
-		Button1="Teleport",
+		end,
 	})
 end
 
@@ -692,12 +639,6 @@ function autoCollectTrackedPlant(entry, model, part)
 	if not entry or not entry.autoCollect or not model or autoCollectedInstances[model] then return end
 	autoCollectedInstances[model] = true
 	task.spawn(function()
-		if entry.special == "frog" then
-			enabled.frog = true
-			autoCollect.frog = true
-			tryCollectFrog(true)
-			return
-		end
 		if part and part.Parent then
 			teleportTo(part.Position + Vector3.new(0, 5, 0))
 		end
@@ -713,43 +654,23 @@ function autoCollectTrackedPlant(entry, model, part)
 end
 
 function processTrackedPlants()
-	local scannedPlants = scanTrackedPlantInstances()
 	for _, entry in pairs(trackedPlantEntries) do
 		if entry.active then
 			local count = 0
-			if entry.special == "frog" then
-				iterateTrackedPlantInstances(entry, function(model, part)
-					count += 1
-					if entry.esp and espToggles.frog then
-						addHighlightESP(model, ENTITY_COLORS.Plant, Color3.new(1, 1, 1), "FrogESP")
-						if part then
-							addBillboardESP(part, entry.label, ENTITY_COLORS.Plant, "FrogESP")
-						end
-					else
-						removeESP(model, "FrogESP")
+			local tag = getPlantESPTag(entry)
+			iterateTrackedPlantInstances(entry, function(model, part)
+				count += 1
+				if entry.esp and espToggles.plants then
+					addHighlightESP(model, ENTITY_COLORS.Plant, Color3.new(1, 1, 1), tag)
+					if part then
+						addBillboardESP(part, entry.label, ENTITY_COLORS.Plant, tag)
 					end
-					notifyTrackedPlant(entry, model, part)
-					autoCollectTrackedPlant(entry, model, part)
-				end)
-			else
-				local tag = getPlantESPTag(entry)
-				local bucket = scannedPlants[entry.key]
-				if bucket then
-					for model, part in pairs(bucket) do
-						count += 1
-						if entry.esp and espToggles.plants then
-							addHighlightESP(model, ENTITY_COLORS.Plant, Color3.new(1, 1, 1), tag)
-							if part then
-								addBillboardESP(part, entry.label, ENTITY_COLORS.Plant, tag)
-							end
-						else
-							removeESP(model, tag)
-						end
-						notifyTrackedPlant(entry, model, part)
-						autoCollectTrackedPlant(entry, model, part)
-					end
+				else
+					removeESP(model, tag)
 				end
-			end
+				notifyTrackedPlant(entry, model, part)
+				autoCollectTrackedPlant(entry, model, part)
+			end)
 			updateTrackedPlantStatus(entry, count)
 		end
 	end
@@ -1079,6 +1000,21 @@ function buildTravelerOptions()
 	sortEntriesByDisplayName(entries)
 	local labels, lookup = buildOptionLookup(entries)
 	travelerOptionLookup = lookup
+	return labels
+end
+
+function buildEntranceOptions()
+	local entries = {}
+	for _, entrance in ipairs(ENTRANCES) do
+		table.insert(entries, {
+			key = entrance.key,
+			displayName = entrance.label,
+			entrance = entrance,
+		})
+	end
+	sortEntriesByDisplayName(entries)
+	local labels, lookup = buildOptionLookup(entries)
+	entranceOptionLookup = lookup
 	return labels
 end
 
@@ -1585,7 +1521,7 @@ end
 function createContainerWrapper(container)
 	local wrapper = { _actual = container, _current = nil }
 
-	function getTarget()
+	local function getTarget()
 		if wrapper._current and wrapper._current._actual then
 			return wrapper._current._actual
 		end
@@ -1716,7 +1652,7 @@ function yieldUIBuild()
 	task.wait()
 end
 
-function createTrackerDropdownAsync(dropdownKey, delay, builder)
+function createTrackerDropdownAsync(dropdownKey, targetWrapper, delay, builder)
 	task.spawn(function()
 		if delay and delay > 0 then
 			task.wait(delay)
@@ -1724,9 +1660,11 @@ function createTrackerDropdownAsync(dropdownKey, delay, builder)
 			task.wait()
 		end
 		if not getgenv().scriptRunning then return end
-		local dropdown = builder()
+		local dropdown = builder(targetWrapper)
 		trackerDropdowns[dropdownKey] = dropdown
-		setDropdownSelection(dropdownKey)
+		if #getSelectionValues(trackerSelections[dropdownKey]) > 0 then
+			setDropdownSelection(dropdownKey)
+		end
 	end)
 end
 
@@ -1797,20 +1735,17 @@ function findWatchedItemsInShops()
 end
 
 function notifyShopItem(itemName, shopName, price)
-	local bindable = Instance.new("BindableFunction")
-	bindable.OnInvoke = function()
-		task.spawn(function()
+	showActionDialog({
+		Title = "🛒 " .. itemName .. " in stock!",
+		Content = shopName .. " — " .. price .. "g",
+		ActionTitle = "Teleport to Shop",
+		Callback = function()
 			local pos = getShopPosition(shopName)
 			if pos then
-				teleportTo(pos + Vector3.new(0,5,0))
-				notify({Title="Teleported", Content="Arrived at "..shopName, Duration=3})
+				teleportTo(pos + Vector3.new(0, 5, 0))
+				notify({Title="Teleported", Content="Arrived at " .. shopName, Duration=3})
 			end
-		end)
-		return true
-	end
-	StarterGui:SetCore("SendNotification", {
-		Title="🛒 "..itemName.." in stock!", Text=shopName.." — "..price.."g",
-		Icon="rbxassetid://1053360438", Duration=15, Callback=bindable, Button1="Teleport to Shop",
+		end,
 	})
 end
 
@@ -1890,9 +1825,13 @@ function onPresentFound(present)
 	updatePresentParagraph()
 	if not enabled.present then return end
 	if notif.present then
-		StarterGui:SetCore("SendNotification", {
-			Title="🎁 Present Found!", Text="A new present has spawned!",
-			Icon="rbxassetid://1053360438", Duration=10, Callback=presentBindable, Button1="Teleport to Present",
+		showActionDialog({
+			Title = "🎁 Present Found!",
+			Content = "A new present has spawned.",
+			ActionTitle = "Teleport to Present",
+			Callback = function()
+				presentBindable.OnInvoke()
+			end,
 		})
 	end
 end
@@ -1937,6 +1876,9 @@ Window = {
 	SetTheme = function(_, theme)
 		pcall(function() WindUI:SetTheme(theme) end)
 	end,
+	ShowDialog = function(_, config)
+		return ActualWindow:Dialog(config)
+	end,
 	Destroy = function()
 		pcall(function() ActualWindow:Destroy() end)
 	end,
@@ -1973,6 +1915,7 @@ animalDropdownOptions, animalLookup = buildEntityOptions(ANIMAL_NAMES, "Animal")
 monsterDropdownOptions, monsterLookup = buildEntityOptions(MONSTER_NPC_NAMES, "Monster")
 collectibleDropdownOptions, collectibleLookup = buildEntityOptions(NIGHTMARE_COLLECTIBLE_NAMES, "Collectible")
 travelerDropdownOptions = buildTravelerOptions()
+entranceDropdownOptions = buildEntranceOptions()
 
 animalOptionLookup = animalLookup
 monsterOptionLookup = monsterLookup
@@ -1994,7 +1937,7 @@ function getThemeOptions()
 	return themes
 end
 
-StarterGui:SetCore("SendNotification", {Title="FF Hub", Text="Loaded! by SeventhBuilder"})
+notify({Title="FF Hub", Content="Loaded! by SeventhBuilder", Duration=3})
 yieldUIBuild()
 
 connectSignal(ReplicatedStorage.Events.NightBegin.OnClientEvent, function()
@@ -2025,11 +1968,6 @@ end
 
 function collectPlantEntryNow(entry)
 	if not entry then return end
-	if entry.special == "frog" then
-		enabled.frog = true
-		tryCollectFrog(true)
-		return
-	end
 	local model, part = findFirstTrackedPlantTarget(entry)
 	if not model then
 		notify({Title=entry.label, Content="Plant is not available right now.", Duration=3})
@@ -2061,12 +1999,6 @@ end
 
 function clearTrackedPlantESP(entry)
 	if not entry then return end
-	if entry.special == "frog" then
-		iterateTrackedPlantInstances(entry, function(model)
-			removeESP(model, "FrogESP")
-		end)
-		return
-	end
 	local tag = getPlantESPTag(entry)
 	iterateTrackedPlantInstances(entry, function(model)
 		removeESP(model, tag)
@@ -2088,18 +2020,7 @@ function removeTrackedPlant(optionLabel, keepSelection)
 	trackedPlantEntries[data.key] = nil
 	plantScanDirty = true
 
-	if entry.special == "frog" then
-		enabled.frog = false
-		autoCollect.frog = false
-		local frogSpawner = spawnersFolder:FindFirstChild("The Sprutle Frog Expansion_Updated")
-		frogSpawner = frogSpawner and frogSpawner:FindFirstChild("Spawner_GratefulFrogs")
-		if frogSpawner and frogSpawner:FindFirstChild("Collectible") then
-			removeESP(frogSpawner.Collectible, "FrogESP")
-		end
-	end
-
 	rebuildPlantSelectionCache()
-	updateFrogParagraph()
 
 	if not keepSelection then
 		trackerSelections.plants[optionLabel] = nil
@@ -2129,13 +2050,6 @@ function addTrackedPlant(optionLabel)
 	trackedPlantEntries[data.key] = entry
 	plantScanDirty = true
 
-	if entry.special == "frog" then
-		enabled.frog = true
-		notif.frog = true
-		autoCollect.frog = false
-		espToggles.frog = true
-	end
-
 	rebuildPlantSelectionCache()
 
 	local section = PlantsTab:CreateSection("Tracked - " .. entry.label .. " (0)")
@@ -2145,7 +2059,6 @@ function addTrackedPlant(optionLabel)
 		CurrentValue = true,
 		Callback = function(v)
 			entry.notify = v
-			if entry.special == "frog" then notif.frog = v end
 		end,
 	})
 	section:CreateToggle({
@@ -2153,20 +2066,8 @@ function addTrackedPlant(optionLabel)
 		CurrentValue = true,
 		Callback = function(v)
 			entry.esp = v
-			if entry.special == "frog" then
-				espToggles.frog = v
-				if not v then
-					pcall(function()
-						local frogSpawner = spawnersFolder["The Sprutle Frog Expansion_Updated"].Spawner_GratefulFrogs
-						if frogSpawner and frogSpawner:FindFirstChild("Collectible") then
-							removeESP(frogSpawner.Collectible, "FrogESP")
-						end
-					end)
-				end
-			else
-				rebuildPlantSelectionCache()
-				if not v then clearTrackedPlantESP(entry) end
-			end
+			rebuildPlantSelectionCache()
+			if not v then clearTrackedPlantESP(entry) end
 		end,
 	})
 	section:CreateToggle({
@@ -2174,7 +2075,6 @@ function addTrackedPlant(optionLabel)
 		CurrentValue = false,
 		Callback = function(v)
 			entry.autoCollect = v
-			if entry.special == "frog" then autoCollect.frog = v end
 		end,
 	})
 	section:CreateButton({
@@ -2184,15 +2084,11 @@ function addTrackedPlant(optionLabel)
 				collectPlantEntryNow(entry)
 				return
 			end
-			if entry.special == "frog" then
-				tryCollectFrog(false)
+			local _, part = findFirstTrackedPlantTarget(entry)
+			if part then
+				teleportTo(part.Position + Vector3.new(0, 5, 0))
 			else
-				local _, part = findFirstTrackedPlantTarget(entry)
-				if part then
-					teleportTo(part.Position + Vector3.new(0, 5, 0))
-				else
-					notify({Title=entry.label, Content="Plant is not available right now.", Duration=3})
-				end
+				notify({Title=entry.label, Content="Plant is not available right now.", Duration=3})
 			end
 		end,
 	})
@@ -2212,8 +2108,7 @@ function addTrackedPlant(optionLabel)
 			removeTrackedPlant(optionLabel)
 		end,
 	})
-	
-	updateFrogParagraph()
+	task.spawn(processTrackedPlants)
 	notify({Title="Plant Tracker", Content="Now tracking: " .. data.displayName, Duration=3})
 end
 
@@ -2359,24 +2254,34 @@ function destroyMatchingWorkspaceInstances(matchFn)
 	return removed
 end
 
-WorldTab:CreateSection("Present")
-WorldTab:CreateToggle({
+local presentSection = WorldTab:CreateSection("Present")
+presentSection:CreateToggle({
 	Name = "Enable Present",
 	CurrentValue = false,
 	Callback = function(v)
 		enabled.present = v
 		updatePresentParagraph()
 		notify({Title="Present", Content=v and "Enabled" or "Disabled", Duration=2})
+		if v and LatestPresent and LatestPresent.Parent and notif.present then
+			showActionDialog({
+				Title = "🎁 Present Ready",
+				Content = "A present is already available.",
+				ActionTitle = "Teleport to Present",
+				Callback = function()
+					presentBindable.OnInvoke()
+				end,
+			})
+		end
 	end,
 })
-WorldTab:CreateToggle({
+presentSection:CreateToggle({
 	Name = "Auto Collect",
 	CurrentValue = false,
 	Callback = function(v)
 		autoCollect.present = v
 	end,
 })
-WorldTab:CreateButton({
+presentSection:CreateButton({
 	Name = "Teleport to Present",
 	Callback = function()
 		if not enabled.present then
@@ -2403,34 +2308,48 @@ WorldTab:CreateButton({
 		end
 	end,
 })
-presentStatusParagraph = WorldTab:CreateParagraph({
+presentStatusParagraph = presentSection:CreateParagraph({
 	Title = "Present Status",
 	Content = "Enable Present to begin tracking.",
 })
 yieldUIBuild()
 
-WorldTab:CreateSection("Entrances")
-for entranceIndex, ev in ipairs(ENTRANCES) do
-	local evRef = ev
-	WorldTab:CreateToggle({
-		Name = "Enable " .. ev.label,
-		CurrentValue = false,
-		Callback = function(v)
-			enabled[evRef.key] = v
-			if not v then
+local entrancesSection = WorldTab:CreateSection("Entrances")
+entrancesSection:CreateLabel("Select multiple entrances. Selecting one again removes it from tracking.")
+createTrackerDropdownAsync("entrances", entrancesSection, 0.02, function(section)
+	return section:CreateDropdown({
+		Name = "Entrances to Track",
+		Options = entranceDropdownOptions,
+		CurrentOption = {},
+		MultipleOptions = true,
+		SearchEnabled = false,
+		Callback = function(opt)
+			syncTrackerSelections("entrances", opt, function(label)
+				local data = entranceOptionLookup[label]
+				local evRef = data and data.entrance
+				if not evRef then return end
+				enabled[evRef.key] = true
+				refreshEntranceStatus(evRef)
+				notify({Title=evRef.label, Content="Enabled", Duration=2})
+			end, function(label)
+				local data = entranceOptionLookup[label]
+				local evRef = data and data.entrance
+				if not evRef then return end
+				enabled[evRef.key] = false
 				clearEntranceESP(evRef.key)
 				updateParagraph(entranceParagraphs[evRef.key], evRef.label, "Disabled.")
-			else
-				refreshEntranceStatus(evRef)
-			end
-			notify({Title=evRef.label, Content=v and "Enabled" or "Disabled", Duration=2})
+				notify({Title=evRef.label, Content="Disabled", Duration=2})
+			end)
 		end,
 	})
-	entranceParagraphs[ev.key] = WorldTab:CreateParagraph({
+end)
+for entranceIndex, ev in ipairs(ENTRANCES) do
+	local evRef = ev
+	entranceParagraphs[ev.key] = entrancesSection:CreateParagraph({
 		Title = ev.label,
-		Content = "Enable above to check status.",
+		Content = "Select it above to check status.",
 	})
-	WorldTab:CreateButton({
+	entrancesSection:CreateButton({
 		Name = "Teleport to " .. ev.label,
 		Callback = function()
 			teleportEntrance(evRef)
@@ -2442,10 +2361,10 @@ for entranceIndex, ev in ipairs(ENTRANCES) do
 end
 yieldUIBuild()
 
-WorldTab:CreateSection("Traveler NPCs")
-WorldTab:CreateLabel("Select multiple travelers. Selecting one again removes it from tracking.")
-createTrackerDropdownAsync("travelers", 0.05, function()
-	return WorldTab:CreateDropdown({
+local travelerSection = WorldTab:CreateSection("Traveler NPCs")
+travelerSection:CreateLabel("Select multiple travelers. Selecting one again removes it from tracking.")
+createTrackerDropdownAsync("travelers", travelerSection, 0.05, function(section)
+	return section:CreateDropdown({
 		Name = "Travelers to Track",
 		Options = travelerDropdownOptions,
 		CurrentOption = {},
@@ -2462,8 +2381,8 @@ createTrackerDropdownAsync("travelers", 0.05, function()
 end)
 yieldUIBuild()
 
-WorldTab:CreateSection("Performance")
-WorldTab:CreateButton({Name="Remove All Trees", Callback=function()
+local performanceSection = WorldTab:CreateSection("Performance")
+performanceSection:CreateButton({Name="Remove All Trees", Callback=function()
 	local treeNames = {
 		PostTrees = true,
 		Tree_A_1 = true,
@@ -2479,7 +2398,7 @@ WorldTab:CreateButton({Name="Remove All Trees", Callback=function()
 	notify({Title="Performance", Content=("Trees removed: %d"):format(removed), Duration=4})
 end})
 
-WorldTab:CreateButton({Name="Remove All Vegetation", Callback=function()
+performanceSection:CreateButton({Name="Remove All Vegetation", Callback=function()
 	local vegetationNames = {
 		GrassyRootSystemPart = true,
 		BushLeafPart = true,
@@ -2503,22 +2422,22 @@ WorldTab:CreateButton({Name="Remove All Vegetation", Callback=function()
 	notify({Title="Performance", Content=("Vegetation removed: %d"):format(removed), Duration=4})
 end})
 
-WorldTab:CreateButton({Name="Remove All Rocks", Callback=function()
+performanceSection:CreateButton({Name="Remove All Rocks", Callback=function()
 	local removed = destroyMatchingWorkspaceInstances(function(obj)
 		return obj.Name == "LargeRockPart" or obj.Name == "RockPart"
 	end)
 	notify({Title="Performance", Content=("Rocks removed: %d"):format(removed), Duration=4})
 end})
 
-WorldTab:CreateSection("Utilities")
-WorldTab:CreateButton({
+local utilitiesSection = WorldTab:CreateSection("Utilities")
+utilitiesSection:CreateButton({
 	Name = "Remove Fog",
 	Callback = function()
 		removeFogEffects()
 		notify({Title="Utilities", Content="Fog removed!", Duration=3})
 	end,
 })
-WorldTab:CreateButton({
+utilitiesSection:CreateButton({
 	Name = "Teleport to Uncollected Ratboy Token",
 	Callback = function()
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/JustApstl/FF/refs/heads/main/scripts/teleport-to-uncollected-ratboy-token.lua"))()
@@ -2526,9 +2445,9 @@ WorldTab:CreateButton({
 })
 yieldUIBuild()
 
-PlantsTab:CreateSection("Plant Tracker")
-createTrackerDropdownAsync("plants", 0.1, function()
-	return PlantsTab:CreateDropdown({
+local plantTrackerSection = PlantsTab:CreateSection("Plant Tracker")
+createTrackerDropdownAsync("plants", plantTrackerSection, 0.1, function(section)
+	return section:CreateDropdown({
 		Name = "Plants to Track",
 		Options = plantDropdownOptions,
 		CurrentOption = {},
@@ -2539,13 +2458,12 @@ createTrackerDropdownAsync("plants", 0.1, function()
 		end,
 	})
 end)
-PlantsTab:CreateLabel("Grateful Frog is included in the same plant tracker dropdown.")
 yieldUIBuild()
 
-PlantsTab:CreateSection("Nightmare Collectibles")
-PlantsTab:CreateLabel("Select multiple collectibles. Selecting one again removes it from tracking.")
-createTrackerDropdownAsync("collectibles", 0.15, function()
-	return PlantsTab:CreateDropdown({
+local collectiblesSection = PlantsTab:CreateSection("Nightmare Collectibles")
+collectiblesSection:CreateLabel("Select multiple collectibles. Selecting one again removes it from tracking.")
+createTrackerDropdownAsync("collectibles", collectiblesSection, 0.15, function(section)
+	return section:CreateDropdown({
 		Name = "Collectibles to Track",
 		Options = collectibleDropdownOptions,
 		CurrentOption = {},
@@ -2562,10 +2480,10 @@ createTrackerDropdownAsync("collectibles", 0.15, function()
 end)
 yieldUIBuild()
 
-AnimalsTab:CreateSection("Animal Tracker")
-AnimalsTab:CreateLabel("Select multiple animals. Selecting one again removes it from tracking.")
-createTrackerDropdownAsync("animals", 0.2, function()
-	return AnimalsTab:CreateDropdown({
+local animalsSection = AnimalsTab:CreateSection("Animal Tracker")
+animalsSection:CreateLabel("Select multiple animals. Selecting one again removes it from tracking.")
+createTrackerDropdownAsync("animals", animalsSection, 0.2, function(section)
+	return section:CreateDropdown({
 		Name = "Animals to Track",
 		Options = animalDropdownOptions,
 		CurrentOption = {},
@@ -2582,10 +2500,10 @@ createTrackerDropdownAsync("animals", 0.2, function()
 end)
 yieldUIBuild()
 
-MonstersTab:CreateSection("Monster Tracker")
-MonstersTab:CreateLabel("Select multiple monsters. Selecting one again removes it from tracking.")
-createTrackerDropdownAsync("monsters", 0.25, function()
-	return MonstersTab:CreateDropdown({
+local monstersSection = MonstersTab:CreateSection("Monster Tracker")
+monstersSection:CreateLabel("Select multiple monsters. Selecting one again removes it from tracking.")
+createTrackerDropdownAsync("monsters", monstersSection, 0.25, function(section)
+	return section:CreateDropdown({
 		Name = "Monsters to Track",
 		Options = monsterDropdownOptions,
 		CurrentOption = {},
@@ -2926,18 +2844,20 @@ task.spawn(function()
 	local shopNames = getShopNames()
 	if #shopNames == 0 then shopNames = {"No shops found"} end
 
-	ShopsTab:CreateSection("🛒 Shop Browser")
-	ShopsTab:CreateDropdown({Name="Select Shop", Options=shopNames, CurrentOption={shopNames[1]},
+	local shopBrowserSection = ShopsTab:CreateSection("🛒 Shop Browser")
+	shopBrowserSection:CreateDropdown({Name="Select Shop", Options=shopNames, CurrentOption={""},
 		MultipleOptions=false, SearchEnabled=true, Flag="SelectedShop",
-		Callback=function(opt) selectedShopName=opt[1]; buildShopItemsDisplay(selectedShopName) end})
-	selectedShopName = shopNames[1]
+		Callback=function(opt)
+			selectedShopName = opt[1]
+			buildShopItemsDisplay(selectedShopName)
+		end})
+	selectedShopName = nil
 	yieldUIBuild()
 
-	shopItemParagraph = ShopsTab:CreateParagraph({Title="Shop Items", Content="Select a shop above to view its inventory."})
-	buildShopItemsDisplay(selectedShopName)
+	shopItemParagraph = shopBrowserSection:CreateParagraph({Title="Shop Items", Content="Select a shop above to view its inventory."})
 	yieldUIBuild()
 
-	ShopsTab:CreateButton({Name="Teleport to Selected Shop", Callback=function()
+	shopBrowserSection:CreateButton({Name="Teleport to Selected Shop", Callback=function()
 		if not selectedShopName or selectedShopName == "No shops found" then
 			notify({Title="Shops", Content="Select a shop first.", Duration=3}); return
 		end
@@ -2946,28 +2866,40 @@ task.spawn(function()
 		else notify({Title="Shops", Content="Can't find "..selectedShopName.."'s position.", Duration=3}) end
 	end})
 
-	ShopsTab:CreateSection("Item Tracker")
-	trackerDropdowns.shopItems = ShopsTab:CreateDropdown({
+	local itemTrackerSection = ShopsTab:CreateSection("Item Tracker")
+	itemTrackerSection:CreateButton({
+		Name = "Load Searchable Item List",
+		Callback = function()
+			if shopItemOptionsLoaded then
+				notify({Title="Shops", Content="Item list is already loaded.", Duration=3})
+				return
+			end
+			notify({Title="Shops", Content="Loading item list...", Duration=3})
+			task.spawn(function()
+				local options = buildShopItemOptions()
+				shopItemOptionsLoaded = true
+				if trackerDropdowns.shopItems then
+					trackerDropdowns.shopItems:Refresh(options)
+					setDropdownSelection("shopItems")
+				end
+				notify({Title="Shops", Content=("Loaded %d item options."):format(#options), Duration=4})
+			end)
+		end,
+	})
+	trackerDropdowns.shopItems = itemTrackerSection:CreateDropdown({
 		Name = "Items to Watch",
-		Options = {"Loading item list..."},
+		Options = {"Press 'Load Searchable Item List'"},
 		CurrentOption = {},
 		MultipleOptions = true,
 		SearchEnabled = true,
 		Callback = function(opt)
-			if shopItemOptionLookup == nil or next(shopItemOptionLookup) == nil then
-				notify({Title="Shops", Content="Item list is still loading.", Duration=3})
+			if not shopItemOptionsLoaded or shopItemOptionLookup == nil or next(shopItemOptionLookup) == nil then
+				notify({Title="Shops", Content="Load the item list first.", Duration=3})
 				return
 			end
 			syncTrackerSelections("shopItems", opt, addWatchedShopItem, removeWatchedShopItem)
 		end,
 	})
-	task.spawn(function()
-		task.wait(0.1)
-		if not getgenv().scriptRunning or not trackerDropdowns.shopItems then return end
-		local options = buildShopItemOptions()
-		trackerDropdowns.shopItems:Refresh(options)
-		setDropdownSelection("shopItems")
-	end)
 end)
 
 -- =====================================================================
@@ -3005,6 +2937,8 @@ cleanupHub = function()
 	dfarm = false
 	lfarm = false
 	watchedShopItems = {}
+	selectedShopName = nil
+	shopItemOptionsLoaded = false
 	plants = {}
 	plantNames = {}
 	loweredPlantNames = {}
@@ -3057,7 +2991,6 @@ getgenv().FFHubUnload = cleanupHub
 
 SettingsTab:CreateSection("🔔 Notifications")
 SettingsTab:CreateToggle({Name="Present Notifications",    CurrentValue=notif.present,    Flag="NotifPresent",    Callback=function(v) notif.present=v end})
-SettingsTab:CreateToggle({Name="Frog Notifications",       CurrentValue=notif.frog,       Flag="NotifFrog",       Callback=function(v) notif.frog=v end})
 SettingsTab:CreateToggle({Name="Cosmic Ghost Notifications",CurrentValue=notif.cosmic,    Flag="NotifCosmic",    Callback=function(v) notif.cosmic=v end})
 SettingsTab:CreateToggle({Name="Path Gambler Notifications",CurrentValue=notif.gambler,   Flag="NotifGambler",   Callback=function(v) notif.gambler=v end})
 SettingsTab:CreateToggle({Name="Firefly Notifications",    CurrentValue=notif.firefly,    Flag="NotifFirefly",    Callback=function(v) notif.firefly=v end})
@@ -3084,23 +3017,10 @@ SettingsTab:CreateToggle({Name="Plant ESP", CurrentValue=espToggles.plants, Flag
 		espToggles.plants = v
 		if not v then
 			for _, entry in pairs(trackedPlantEntries) do
-				if not entry.special then
-					clearTrackedPlantESP(entry)
-				end
+				clearTrackedPlantESP(entry)
 			end
 		end
 		notify({Title="Plant ESP", Content=v and "Enabled" or "Disabled", Duration=2})
-	end})
-SettingsTab:CreateToggle({Name="Frog ESP", CurrentValue=espToggles.frog, Flag="FrogESP",
-	Callback=function(v)
-		espToggles.frog = v
-		if not v then
-			pcall(function()
-				local s = Workspace.Spawners["The Sprutle Frog Expansion_Updated"].Spawner_GratefulFrogs
-				if s and s:FindFirstChild("Collectible") then removeESP(s.Collectible, "FrogESP") end
-			end)
-		end
-		notify({Title="Frog ESP", Content=v and "Enabled" or "Disabled", Duration=2})
 	end})
 SettingsTab:CreateToggle({Name="Players ESP", CurrentValue=espToggles.players, Flag="PlayersESP",
 	Callback=function(v)
@@ -3285,11 +3205,10 @@ task.spawn(function()
 	end
 end)
 
--- Periodic paragraph refresh loop (frog + present status)
+-- Periodic paragraph refresh loop
 task.spawn(function()
 	while getgenv().scriptRunning do
 		task.wait(5)
-		updateFrogParagraph()
 		updatePresentParagraph()
 	end
 end)
@@ -3298,7 +3217,6 @@ end)
 task.spawn(function()
 	task.wait(3)
 	onNightBeginEntrances()
-	updateFrogParagraph()
 	updatePresentParagraph()
 	processTrackedPlants()
 	for name, entry in pairs(entityWatchList) do
