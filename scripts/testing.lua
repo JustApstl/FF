@@ -957,7 +957,7 @@ local PLANT_TRACK_NAMES = {
 	"Lakethistle","Rozier Flower","Lemon Flower","Pearl Flower","Plumbo Flower","Strangeman Flower",
 	"Clamstack","SandCoral","Shell","Strangeman Shell","Falichen","Hungry Flower","Abandoned Flower",
 	"Sun Flower","Moon Flower","Lool Flower","Fife Flower","Gorbacabbage","Fruit Stack","TravelerPlant",
-	"The Object From Earth","Angry Bushdweller","Grateful Frog","Brown Mushroom","Flatty Mushroom",
+	"The Object From Earth","Angry Bushdweller","GratefulFrogs","Brown Mushroom","Flatty Mushroom",
 	"Fantastic Mushroom","Portabato Mushroom","Target Mushroom","Brain Mushroom","Glow Mushroom",
 	"Yellow Balloon Mushroom","Bobber Mushroom","Grugbug Mushroom","Honey Mushroom","Lumoore Mushroom",
 	"Purple Balloon Mushroom","Sprutle Mushroom","Moon Mushroom","Snowball Mushroom","Icem Mushroom",
