@@ -1042,6 +1042,27 @@ function plantNameMatches(candidateName, targetKey)
 		or string.find(targetKey, candidateKey, 1, true) ~= nil
 end
 
+function addPlantMatchKey(target, value)
+	local key = normalizePlantKey(value)
+	if key == "" then
+		return
+	end
+	target[key] = true
+	if string.sub(key, -1) == "s" and #key > 1 then
+		target[string.sub(key, 1, -2)] = true
+	end
+	if string.sub(key, -2) == "es" and #key > 2 then
+		target[string.sub(key, 1, -3)] = true
+	end
+end
+
+function buildPlantMatchKeys(workspaceName, displayName)
+	local keys = {}
+	addPlantMatchKey(keys, workspaceName)
+	addPlantMatchKey(keys, displayName)
+	return keys
+end
+
 function toDisplayName(rawName)
 	if DISPLAY_NAME_OVERRIDES[rawName] then
 		return DISPLAY_NAME_OVERRIDES[rawName]
@@ -1111,11 +1132,13 @@ function buildPlantOptions()
 	local entries = {}
 
 	for _, plantName in ipairs(PLANT_TRACK_NAMES) do
+		local displayName = toDisplayName(plantName)
 		table.insert(entries, {
 			key = plantName,
 			workspaceName = plantName,
-			displayName = toDisplayName(plantName),
+			displayName = displayName,
 			matchKey = normalizePlantKey(plantName),
+			matchKeys = buildPlantMatchKeys(plantName, displayName),
 			entityType = "Plant",
 			special = plantName == "GratefulFrogs" and "frog" or nil,
 		})
@@ -1319,7 +1342,10 @@ function resolveTrackedPlantTarget(instance)
 	end
 	local part
 	if model and model.FindFirstChild then
-		part = model:FindFirstChild("HitBox") or model:FindFirstChildWhichIsA("BasePart", true)
+		local collectible = model:FindFirstChild("Collectible")
+		part = model:FindFirstChild("HitBox")
+			or (collectible and collectible:FindFirstChildWhichIsA("BasePart", true))
+			or model:FindFirstChildWhichIsA("BasePart", true)
 	end
 	if not part and instance:IsA("BasePart") then
 		part = instance
@@ -1333,11 +1359,43 @@ function getTrackedPlantEntryByName(nameKey, exactLookup, activeEntries)
 		return exactEntry
 	end
 	for _, entry in pairs(activeEntries) do
-		if plantNameMatches(nameKey, entry.matchKey or normalizePlantKey(entry.workspaceName)) then
+		if entry.matchKeys then
+			for matchKey in pairs(entry.matchKeys) do
+				if plantNameMatches(nameKey, matchKey) then
+					return entry
+				end
+			end
+		elseif plantNameMatches(nameKey, entry.matchKey or normalizePlantKey(entry.workspaceName)) then
 			return entry
 		end
 	end
 	return nil
+end
+
+function getTrackedPlantEntryByItemValue(itemValue, activeEntries)
+	local itemId = tonumber(itemValue)
+	if not itemId then
+		return nil, nil
+	end
+	buildItemInfoEntries()
+	local itemInfo = itemInfoById[itemId]
+	local fullName = itemInfo and itemInfo.displayName
+	if not fullName or fullName == "" then
+		return nil, nil
+	end
+	local fullNameKey = normalizePlantKey(fullName)
+	for _, entry in pairs(activeEntries) do
+		if entry.matchKeys then
+			for matchKey in pairs(entry.matchKeys) do
+				if plantNameMatches(fullNameKey, matchKey) then
+					return entry, fullName
+				end
+			end
+		elseif plantNameMatches(fullNameKey, entry.matchKey or normalizePlantKey(entry.workspaceName)) then
+			return entry, fullName
+		end
+	end
+	return nil, fullName
 end
 
 function findTrackedPlantMatch(instance, exactLookup, activeEntries)
@@ -1360,7 +1418,13 @@ function scanTrackedPlantInstances()
 		if entry.active and entry.workspaceName and not entry.special then
 			activeEntries[key] = entry
 			foundByKey[key] = {}
-			exactLookup[entry.matchKey or normalizePlantKey(entry.workspaceName)] = entry
+			if entry.matchKeys then
+				for matchKey in pairs(entry.matchKeys) do
+					exactLookup[matchKey] = entry
+				end
+			else
+				exactLookup[entry.matchKey or normalizePlantKey(entry.workspaceName)] = entry
+			end
 		end
 	end
 	if next(activeEntries) == nil then
@@ -1376,15 +1440,25 @@ function scanTrackedPlantInstances()
 	end
 
 	for index, descendant in ipairs(spawnersFolder:GetDescendants()) do
-		if descendant:IsA("Model") or descendant:IsA("Folder") or descendant:IsA("BasePart") then
-			local entry, matchedInstance = findTrackedPlantMatch(descendant, exactLookup, activeEntries)
+		local entry, matchedInstance = nil, nil
+		if descendant:IsA("IntValue") and descendant.Name == "Item" and descendant.Parent and descendant.Parent.Name == "Info" then
+			entry = select(1, getTrackedPlantEntryByItemValue(descendant.Value, activeEntries))
 			if entry then
-				local model, part = resolveTrackedPlantTarget(matchedInstance or descendant)
-				if model and part then
-					local bucket = foundByKey[entry.key]
-					if bucket and not bucket[model] then
-						bucket[model] = part
-					end
+				matchedInstance = descendant.Parent.Parent or descendant.Parent
+			end
+		elseif descendant:IsA("Model") or descendant:IsA("Folder") or descendant:IsA("BasePart") then
+			local nameEntry, nameMatchedInstance = findTrackedPlantMatch(descendant, exactLookup, activeEntries)
+			if nameEntry then
+				entry = nameEntry
+				matchedInstance = nameMatchedInstance or descendant
+			end
+		end
+		if entry then
+			local model, part = resolveTrackedPlantTarget(matchedInstance or descendant)
+			if model and part then
+				local bucket = foundByKey[entry.key]
+				if bucket and not bucket[model] then
+					bucket[model] = part
 				end
 			end
 		end
@@ -2481,6 +2555,7 @@ function addTrackedPlant(optionLabel)
 		key = data.key,
 		workspaceName = data.workspaceName,
 		matchKey = data.matchKey,
+		matchKeys = data.matchKeys or buildPlantMatchKeys(data.workspaceName, data.displayName),
 		optionLabel = optionLabel,
 		label = data.displayName,
 		displayName = data.displayName,
